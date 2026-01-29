@@ -92,7 +92,7 @@
             const [isPlaying, setIsPlaying] = useState(false);
             const audioRef = useRef(null);
 
-            const weddingDate = useMemo(() => new Date('2025-06-21T16:00:00'), []);
+            const weddingDate = useMemo(() => new Date('2027-06-21T16:00:00'), []);
 
             const hearts = useMemo(() => {
                 return [...Array(12)].map((_, i) => ({
@@ -232,7 +232,7 @@
                                 Lorens <span className="text-4xl md:text-7xl font-script block md:inline my-2 text-white/90">&</span> Cristine
                             </h1>
                             <div className="h-px w-24 bg-white/40 mx-auto my-10" />
-                            <p className="text-lg md:text-2xl tracking-[0.3em] uppercase font-light font-serif-luxe italic mb-12">June 21, 2025 • Napa Valley</p>
+                            <p className="text-lg md:text-2xl tracking-[0.3em] uppercase font-light font-serif-luxe italic mb-12">June 21, 2027 • Napa Valley</p>
                             
                             <div className="flex justify-center gap-6 md:gap-12">
                                 {['Days', 'Hrs', 'Min', 'Sec'].map((label, i) => (
@@ -262,7 +262,7 @@
                     <section className="py-24 bg-[#f4f6f2] relative overflow-hidden">
                         <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8 relative z-10">
                             {[
-                                { icon: 'calendar-days', title: 'The Date', p1: 'June 21, 2025', p2: '4:00 PM Reception' },
+                                { icon: 'calendar-days', title: 'The Date', p1: 'June 21, 2027', p2: '4:00 PM Reception' },
                                 { icon: 'map', title: 'The Place', p1: 'Grand Oak Estate', p2: 'Napa Valley, CA' },
                                 { icon: 'sparkles', title: 'The Style', p1: 'Formal Garden', p2: 'Sage & Emerald Tones' }
                             ].map((item, i) => (
@@ -363,7 +363,7 @@
                             <Icon name="heart" />
                         </div>
                         <h2 className="text-5xl font-script text-emerald-luxe mb-4">Lorens & Cristine</h2>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-[0.6em] font-medium">Napa Valley • 2025</p>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-[0.6em] font-medium">Napa Valley • 2027</p>
                     </footer>
                 </div>
             );
