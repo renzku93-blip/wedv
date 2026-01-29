@@ -62,18 +62,29 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* Music Pulse Animation */
+        @keyframes music-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+        .animate-music {
+            animation: music-pulse 2s infinite ease-in-out;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
         const App = () => {
             const [rsvpStatus, setRsvpStatus] = useState('idle');
             const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
             const [formData, setFormData] = useState({ name: '', attending: 'accept', guests: '1' });
+            const [isMuted, setIsMuted] = useState(true);
+            const audioRef = useRef(null);
 
             const weddingDate = useMemo(() => new Date('2025-06-21T16:00:00'), []);
 
@@ -114,6 +125,37 @@
                 document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
             }, []);
 
+            // Handle Audio Autoplay workarounds
+            useEffect(() => {
+                const enableAudio = () => {
+                    if (audioRef.current && isMuted) {
+                        audioRef.current.play().then(() => {
+                            setIsMuted(false);
+                        }).catch(err => console.log("Autoplay blocked, waiting for interaction"));
+                    }
+                    window.removeEventListener('scroll', enableAudio);
+                    window.removeEventListener('click', enableAudio);
+                };
+
+                window.addEventListener('scroll', enableAudio);
+                window.addEventListener('click', enableAudio);
+                return () => {
+                    window.removeEventListener('scroll', enableAudio);
+                    window.removeEventListener('click', enableAudio);
+                };
+            }, [isMuted]);
+
+            const toggleMusic = () => {
+                if (audioRef.current) {
+                    if (isMuted) {
+                        audioRef.current.play();
+                    } else {
+                        audioRef.current.pause();
+                    }
+                    setIsMuted(!isMuted);
+                }
+            };
+
             const handleRSVP = (e) => {
                 e.preventDefault();
                 setRsvpStatus('loading');
@@ -122,6 +164,27 @@
 
             return (
                 <div className="overflow-x-hidden selection:bg-[#1b3022]/10">
+                    {/* Background Music */}
+                    <audio 
+                        ref={audioRef}
+                        loop
+                        src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" // Romantic instrumental placeholder
+                    />
+
+                    {/* Mute Button Toggle */}
+                    <button 
+                        onClick={toggleMusic}
+                        className="fixed bottom-6 right-6 z-[100] bg-white/80 backdrop-blur-md p-4 rounded-full shadow-lg border border-emerald-luxe/10 text-emerald-luxe transition-all hover:scale-110 active:scale-95"
+                    >
+                        {isMuted ? (
+                            <i data-lucide="volume-x" size="24"></i>
+                        ) : (
+                            <div className="animate-music">
+                                <i data-lucide="music" size="24"></i>
+                            </div>
+                        )}
+                    </button>
+
                     {/* Falling Hearts Layer */}
                     {hearts.map(h => (
                         <div 
