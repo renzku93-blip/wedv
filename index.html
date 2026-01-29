@@ -21,7 +21,6 @@
         .text-emerald-luxe { color: #1b3022; }
         .border-emerald-luxe { border-color: #1b3022; }
 
-        /* Banner Zoom Animation */
         @keyframes slow-zoom {
             from { transform: scale(1); }
             to { transform: scale(1.1); }
@@ -30,7 +29,6 @@
             animation: slow-zoom 20s infinite alternate ease-in-out;
         }
 
-        /* Heart Falling Animation */
         @keyframes heart-fall {
             0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
             10% { opacity: 0.4; }
@@ -63,7 +61,6 @@
             transform: translateY(0);
         }
 
-        /* Music Pulse Animation */
         @keyframes music-pulse {
             0%, 100% { transform: scale(1); opacity: 0.8; }
             50% { transform: scale(1.2); opacity: 1; }
@@ -79,16 +76,25 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
+        // Custom Icon Component to prevent Lucide initialization crashes
+        const Icon = ({ name, size = 24, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+        };
+
         const App = () => {
             const [rsvpStatus, setRsvpStatus] = useState('idle');
             const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
             const [formData, setFormData] = useState({ name: '', attending: 'accept', guests: '1' });
-            const [isMuted, setIsMuted] = useState(true);
+            const [isPlaying, setIsPlaying] = useState(false);
             const audioRef = useRef(null);
 
             const weddingDate = useMemo(() => new Date('2025-06-21T16:00:00'), []);
 
-            // Heart Particle Generator
             const hearts = useMemo(() => {
                 return [...Array(12)].map((_, i) => ({
                     id: i,
@@ -125,36 +131,37 @@
                 document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
             }, []);
 
-            // Handle Audio Autoplay workarounds
-            useEffect(() => {
-                const enableAudio = () => {
-                    if (audioRef.current && isMuted) {
-                        audioRef.current.play().then(() => {
-                            setIsMuted(false);
-                        }).catch(err => console.log("Autoplay blocked, waiting for interaction"));
-                    }
-                    window.removeEventListener('scroll', enableAudio);
-                    window.removeEventListener('click', enableAudio);
-                };
-
-                window.addEventListener('scroll', enableAudio);
-                window.addEventListener('click', enableAudio);
-                return () => {
-                    window.removeEventListener('scroll', enableAudio);
-                    window.removeEventListener('click', enableAudio);
-                };
-            }, [isMuted]);
-
             const toggleMusic = () => {
                 if (audioRef.current) {
-                    if (isMuted) {
-                        audioRef.current.play();
-                    } else {
+                    if (isPlaying) {
                         audioRef.current.pause();
+                        setIsPlaying(false);
+                    } else {
+                        audioRef.current.play().catch(e => console.error("Playback failed", e));
+                        setIsPlaying(true);
                     }
-                    setIsMuted(!isMuted);
                 }
             };
+
+            // Start music on first interaction
+            useEffect(() => {
+                const handleFirstInteraction = () => {
+                    if (audioRef.current && !isPlaying) {
+                        audioRef.current.play()
+                            .then(() => setIsPlaying(true))
+                            .catch(e => console.log("Waiting for more direct interaction"));
+                    }
+                    window.removeEventListener('scroll', handleFirstInteraction);
+                    window.removeEventListener('click', handleFirstInteraction);
+                };
+
+                window.addEventListener('scroll', handleFirstInteraction);
+                window.addEventListener('click', handleFirstInteraction);
+                return () => {
+                    window.removeEventListener('scroll', handleFirstInteraction);
+                    window.removeEventListener('click', handleFirstInteraction);
+                };
+            }, [isPlaying]);
 
             const handleRSVP = (e) => {
                 e.preventDefault();
@@ -164,28 +171,25 @@
 
             return (
                 <div className="overflow-x-hidden selection:bg-[#1b3022]/10">
-                    {/* Background Music */}
                     <audio 
                         ref={audioRef}
                         loop
-                        src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" // Romantic instrumental placeholder
+                        src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808f3030e.mp3"
                     />
 
-                    {/* Mute Button Toggle */}
                     <button 
                         onClick={toggleMusic}
-                        className="fixed bottom-6 right-6 z-[100] bg-white/80 backdrop-blur-md p-4 rounded-full shadow-lg border border-emerald-luxe/10 text-emerald-luxe transition-all hover:scale-110 active:scale-95"
+                        className="fixed bottom-6 right-6 z-[100] bg-white/90 backdrop-blur-md p-4 rounded-full shadow-xl border border-emerald-luxe/10 text-emerald-luxe transition-all hover:scale-110 active:scale-95"
                     >
-                        {isMuted ? (
-                            <i data-lucide="volume-x" size="24"></i>
+                        {!isPlaying ? (
+                            <Icon name="volume-x" />
                         ) : (
                             <div className="animate-music">
-                                <i data-lucide="music" size="24"></i>
+                                <Icon name="music" />
                             </div>
                         )}
                     </button>
 
-                    {/* Falling Hearts Layer */}
                     {hearts.map(h => (
                         <div 
                             key={h.id}
@@ -198,13 +202,13 @@
                                 height: h.size
                             }}
                         >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-full h-full text-black">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" className="w-full h-full opacity-30">
                                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                             </svg>
                         </div>
                     ))}
 
-                    {/* Hero Section */}
+                    {/* Hero */}
                     <section className="relative h-screen flex items-center justify-center text-center px-4 overflow-hidden">
                         <div 
                             className="absolute inset-0 z-0 animate-slow-zoom"
@@ -222,7 +226,7 @@
                                 Lorens <span className="text-4xl md:text-7xl font-script block md:inline my-2 text-white/90">&</span> Cristine
                             </h1>
                             <div className="h-px w-24 bg-white/40 mx-auto my-10" />
-                            <p className="text-lg md:text-2xl tracking-[0.3em] uppercase font-light font-serif-luxe italic mb-12">June 21, 2025 • Napa Valley</p>
+                            <p className="text-lg md:text-2xl tracking-[0.3em] uppercase font-light font-serif-luxe italic mb-12">June 21, 2027 • Napa Valley</p>
                             
                             <div className="flex justify-center gap-6 md:gap-12">
                                 {['Days', 'Hrs', 'Min', 'Sec'].map((label, i) => (
@@ -236,21 +240,21 @@
                             </div>
                         </div>
                         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 text-white/50 animate-bounce">
-                            <i data-lucide="chevron-down" size="32"></i>
+                            <Icon name="chevron-down" size={32} />
                         </div>
                     </section>
 
-                    {/* Transition Section */}
+                    {/* Transition */}
                     <section className="fade-in-up py-24 px-6 text-center bg-white">
                         <div className="animate-float inline-block text-emerald-luxe/30 mb-8">
-                            <i data-lucide="heart" size="48"></i>
+                            <Icon name="heart" size={48} />
                         </div>
                         <h2 className="text-3xl md:text-5xl font-serif-luxe italic font-light max-w-3xl mx-auto leading-relaxed text-emerald-luxe">
                             "Where there is love, there is life. We invite you to join us as we step into our new beginning."
                         </h2>
                     </section>
 
-                    {/* Event Details */}
+                    {/* Details */}
                     <section className="py-24 bg-[#f4f6f2] relative overflow-hidden">
                         <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8 relative z-10">
                             {[
@@ -260,7 +264,7 @@
                             ].map((item, i) => (
                                 <div key={i} className="fade-in-up bg-white p-12 rounded-3xl shadow-sm border border-emerald-luxe/5 text-center transition-all hover:shadow-md">
                                     <div className="text-emerald-luxe/40 mb-8 flex justify-center">
-                                        <i data-lucide={item.icon} size="32"></i>
+                                        <Icon name={item.icon} size={32} />
                                     </div>
                                     <h4 className="font-serif-luxe text-2xl mb-4 tracking-wide text-emerald-luxe">{item.title}</h4>
                                     <p className="text-gray-700 font-medium mb-1">{item.p1}</p>
@@ -270,18 +274,18 @@
                         </div>
                     </section>
 
-                    {/* Story Section */}
+                    {/* Story */}
                     <section className="py-24 px-4 bg-white">
                         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-20 items-center">
                             <div className="fade-in-up relative group">
-                                <div className="absolute -inset-4 border border-emerald-luxe/10 rounded-full animate-slow-zoom" />
+                                <div className="absolute -inset-4 border border-emerald-luxe/10 rounded-full" />
                                 <img 
                                     src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80" 
                                     className="rounded-full aspect-square object-cover shadow-2xl relative z-10" 
                                 />
                             </div>
                             <div className="fade-in-up space-y-8">
-                                <i data-lucide="stars" className="text-emerald-luxe/20" size="32"></i>
+                                <Icon name="stars" className="text-emerald-luxe/20" size={32} />
                                 <h3 className="text-5xl font-serif-luxe font-light text-emerald-luxe">Our Forever Story</h3>
                                 <p className="text-gray-600 leading-loose text-lg font-light">
                                     What started as a shared passion for adventure grew into a lifetime of partnership. Lorens and Cristine found in each other a home that moves with them, wherever the road may lead.
@@ -292,19 +296,16 @@
                         </div>
                     </section>
 
-                    {/* RSVP Section */}
+                    {/* RSVP */}
                     <section className="py-32 bg-[#fdfdfb] relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-luxe/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-                        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-luxe/5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
-
                         <div className="fade-in-up max-w-2xl mx-auto px-6 relative z-10">
                             <div className="bg-white/70 backdrop-blur-md p-10 md:p-16 rounded-[3rem] border border-emerald-luxe/10 shadow-xl text-center">
-                                <h2 className="text-5xl font-serif-luxe font-light mb-4 text-emerald-luxe tracking-tight">RSVP</h2>
-                                <p className="text-emerald-luxe/50 mb-12 italic font-serif-luxe text-lg">Kindly respond by the 21st of May, 2025</p>
+                                <h2 className="text-5xl font-serif-luxe font-light mb-4 text-emerald-luxe">RSVP</h2>
+                                <p className="text-emerald-luxe/50 mb-12 italic font-serif-luxe text-lg">Kindly respond by May 21, 2025</p>
 
                                 {rsvpStatus === 'success' ? (
                                     <div className="py-12 bg-emerald-luxe/5 rounded-3xl border border-emerald-luxe/10">
-                                        <i data-lucide="check" className="mx-auto mb-6 text-emerald-luxe/60" size="48"></i>
+                                        <Icon name="check" className="mx-auto mb-6 text-emerald-luxe/60" size={48} />
                                         <p className="text-2xl font-serif-luxe text-emerald-luxe">We look forward to celebrating with you!</p>
                                     </div>
                                 ) : (
@@ -333,7 +334,7 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="text-[10px] uppercase tracking-widest text-emerald-luxe/40 font-bold mb-3 block">Guest Count</label>
+                                                <label className="text-[10px] uppercase tracking-widest text-emerald-luxe/40 font-bold mb-3 block">Guests</label>
                                                 <select 
                                                     className="w-full bg-transparent border-b border-emerald-luxe/20 py-4 focus:border-emerald-luxe outline-none appearance-none font-serif-luxe text-lg text-emerald-luxe"
                                                     value={formData.guests}
@@ -344,7 +345,7 @@
                                             </div>
                                         </div>
 
-                                        <button className="w-full bg-emerald-luxe text-white py-6 rounded-full hover:shadow-lg hover:-translate-y-1 transition-all uppercase tracking-[0.4em] text-[10px] font-black mt-12">
+                                        <button className="w-full bg-emerald-luxe text-white py-6 rounded-full hover:shadow-lg transition-all uppercase tracking-[0.4em] text-[10px] font-black mt-12">
                                             {rsvpStatus === 'loading' ? 'Sending...' : 'Confirm My Attendance'}
                                         </button>
                                     </form>
@@ -353,11 +354,11 @@
                         </div>
                     </section>
 
-                    <footer className="py-24 text-center bg-white border-t border-gray-50">
+                    <footer className="py-24 text-center bg-white">
                         <div className="flex justify-center gap-4 mb-8 text-emerald-luxe/10">
-                            <i data-lucide="heart" size="24"></i>
-                            <i data-lucide="heart" size="24"></i>
-                            <i data-lucide="heart" size="24"></i>
+                            <Icon name="heart" />
+                            <Icon name="heart" />
+                            <Icon name="heart" />
                         </div>
                         <h2 className="text-5xl font-script text-emerald-luxe mb-4">Lorens & Cristine</h2>
                         <p className="text-[10px] text-gray-400 uppercase tracking-[0.6em] font-medium">Napa Valley • 2025</p>
@@ -368,8 +369,6 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-
-        setTimeout(() => { lucide.createIcons(); }, 300);
     </script>
 </body>
 </html>
