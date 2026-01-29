@@ -107,7 +107,7 @@
             const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
             const [formData, setFormData] = useState({ name: '', attending: 'accept', guests: '1' });
             
-            // 1. SET DEFAULT TO TRUE
+            // Start state as playing (UI)
             const [isPlaying, setIsPlaying] = useState(true);
             const audioRef = useRef(null);
 
@@ -158,6 +158,10 @@
             // TOGGLE FUNCTION
             const toggleMusic = () => {
                 if (!audioRef.current) return;
+                
+                // If the user manually toggles, we remove the muted state immediately
+                audioRef.current.muted = false;
+
                 if (!audioRef.current.paused) {
                     audioRef.current.pause();
                     setIsPlaying(false);
@@ -166,22 +170,33 @@
                 }
             };
 
-            // AGGRESSIVE AUTOPLAY TRIGGER
+            // DIRECT PLAY LOGIC
             useEffect(() => {
-                const startAudio = () => {
-                    if (audioRef.current && audioRef.current.paused) {
-                        audioRef.current.play()
+                const audio = audioRef.current;
+                if (!audio) return;
+
+                // 1. Try playing immediately (often works if browser caches previous interaction or is configured to allow)
+                // We start muted to bypass initial block
+                audio.muted = true;
+                audio.play().catch(() => {
+                    console.log("Autoplay blocked, waiting for interaction...");
+                });
+
+                // 2. Unmute and Play as soon as user touches/scrolls
+                const unmuteAndPlay = () => {
+                    if (audio) {
+                        audio.muted = false;
+                        audio.play()
                             .then(() => setIsPlaying(true))
-                            .catch((err) => console.log("Waiting for user interaction..."));
+                            .catch((err) => console.log("Play failed", err));
                     }
                 };
 
-                // Listen for any movement or touch
-                const events = ['scroll', 'click', 'touchstart', 'mousemove'];
-                events.forEach(event => window.addEventListener(event, startAudio, { once: true }));
+                const events = ['mousedown', 'touchstart', 'scroll', 'keydown'];
+                events.forEach(event => window.addEventListener(event, unmuteAndPlay, { once: true }));
                 
                 return () => {
-                    events.forEach(event => window.removeEventListener(event, startAudio));
+                    events.forEach(event => window.removeEventListener(event, unmuteAndPlay));
                 };
             }, []);
 
@@ -198,6 +213,7 @@
                         loop
                         playsInline
                         autoPlay
+                        muted
                         src="music.mp3"
                     />
 
