@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lorens & Cristine | Wedding Invitation</title>
+    <title>Lorens & Cristine | Enchanted Wedding</title>
     <!-- React & Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -11,11 +11,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,400&family=Montserrat:wght@200;400&display=swap" rel="stylesheet">
     <style>
         .font-script { font-family: 'Alex Brush', cursive; }
-        body { font-family: 'Playfair Display', serif; }
+        .font-serif-luxe { font-family: 'Cormorant Garamond', serif; }
+        body { font-family: 'Montserrat', sans-serif; background-color: #fdfdfb; color: #2d3436; }
         
+        .bg-emerald-luxe { background-color: #1b3022; }
+        .text-emerald-luxe { color: #1b3022; }
+        .border-emerald-luxe { border-color: #1b3022; }
+
+        /* Banner Zoom Animation */
         @keyframes slow-zoom {
             from { transform: scale(1); }
             to { transform: scale(1.1); }
@@ -24,18 +30,33 @@
             animation: slow-zoom 20s infinite alternate ease-in-out;
         }
 
-        @keyframes float-slow {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(10deg); }
+        /* Heart Falling Animation */
+        @keyframes heart-fall {
+            0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.4; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(100vh) translateX(100px) rotate(360deg); opacity: 0; }
         }
-        .animate-float-slow {
-            animation: float-slow 8s infinite ease-in-out;
+        .heart-particle {
+            position: fixed;
+            top: -10%;
+            pointer-events: none;
+            z-index: 50;
+            animation: heart-fall linear infinite;
+        }
+
+        @keyframes subtle-float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.02); }
+        }
+        .animate-float {
+            animation: subtle-float 10s infinite ease-in-out;
         }
 
         .fade-in-up {
-            transition: all 1s ease-out;
+            transition: all 1.4s cubic-bezier(0.16, 1, 0.3, 1);
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(20px);
         }
         .fade-in-up.visible {
             opacity: 1;
@@ -43,7 +64,7 @@
         }
     </style>
 </head>
-<body class="bg-[#faf9f6]">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -52,11 +73,21 @@
         const App = () => {
             const [rsvpStatus, setRsvpStatus] = useState('idle');
             const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-            const [formData, setFormData] = useState({ name: '', attending: 'accept', guests: '1', dietary: '' });
+            const [formData, setFormData] = useState({ name: '', attending: 'accept', guests: '1' });
 
             const weddingDate = useMemo(() => new Date('2025-06-21T16:00:00'), []);
 
-            // Countdown Logic
+            // Heart Particle Generator
+            const hearts = useMemo(() => {
+                return [...Array(12)].map((_, i) => ({
+                    id: i,
+                    left: `${Math.random() * 100}%`,
+                    duration: `${12 + Math.random() * 18}s`,
+                    delay: `${Math.random() * 10}s`,
+                    size: `${20 + Math.random() * 25}px`,
+                }));
+            }, []);
+
             useEffect(() => {
                 const timer = setInterval(() => {
                     const now = new Date();
@@ -73,7 +104,6 @@
                 return () => clearInterval(timer);
             }, [weddingDate]);
 
-            // Scroll Animation Logic
             useEffect(() => {
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
@@ -91,7 +121,26 @@
             };
 
             return (
-                <div className="text-[#333] overflow-x-hidden selection:bg-[#c5a059]/30">
+                <div className="overflow-x-hidden selection:bg-[#1b3022]/10">
+                    {/* Falling Hearts Layer */}
+                    {hearts.map(h => (
+                        <div 
+                            key={h.id}
+                            className="heart-particle"
+                            style={{ 
+                                left: h.left, 
+                                animationDuration: h.duration, 
+                                animationDelay: h.delay,
+                                width: h.size,
+                                height: h.size
+                            }}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-full h-full text-black">
+                                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                            </svg>
+                        </div>
+                    ))}
+
                     {/* Hero Section */}
                     <section className="relative h-screen flex items-center justify-center text-center px-4 overflow-hidden">
                         <div 
@@ -102,106 +151,138 @@
                                 backgroundPosition: 'center',
                             }}
                         />
-                        <div className="absolute inset-0 bg-black/40 z-10" />
+                        <div className="absolute inset-0 bg-black/30 z-10" />
                         
-                        <div className="relative z-20 text-white max-w-4xl">
-                            <p className="tracking-[0.4em] uppercase text-xs md:text-sm mb-6 opacity-90">The Wedding Celebration of</p>
-                            <h1 className="text-5xl sm:text-7xl md:text-9xl font-light mb-4 drop-shadow-lg">
-                                Lorens <span className="block md:inline text-3xl md:text-6xl font-script">&</span> Cristine
+                        <div className="relative z-20 max-w-5xl text-white">
+                            <span className="inline-block tracking-[0.5em] uppercase text-[10px] md:text-xs mb-8 opacity-80 font-medium">The Celebration of a Lifetime</span>
+                            <h1 className="text-6xl sm:text-8xl md:text-9xl font-serif-luxe font-light mb-4 drop-shadow-2xl">
+                                Lorens <span className="text-4xl md:text-7xl font-script block md:inline my-2 text-white/90">&</span> Cristine
                             </h1>
-                            <div className="h-px w-16 bg-white/60 mx-auto my-8 md:my-10" />
-                            <p className="text-lg md:text-2xl font-light tracking-widest uppercase mb-12">June 21, 2025 • Napa Valley</p>
+                            <div className="h-px w-24 bg-white/40 mx-auto my-10" />
+                            <p className="text-lg md:text-2xl tracking-[0.3em] uppercase font-light font-serif-luxe italic mb-12">June 21, 2025 • Napa Valley</p>
                             
-                            <div className="flex justify-center gap-4 md:gap-8 mb-12">
+                            <div className="flex justify-center gap-6 md:gap-12">
                                 {['Days', 'Hrs', 'Min', 'Sec'].map((label, i) => (
                                     <div key={i} className="flex flex-col items-center">
-                                        <span className="text-2xl md:text-4xl font-light">
+                                        <span className="text-3xl md:text-5xl font-serif-luxe border-b border-white/20 pb-2 mb-2">
                                             {String(Object.values(timeLeft)[i]).padStart(2, '0')}
                                         </span>
-                                        <span className="text-[10px] uppercase tracking-widest opacity-70">{label}</span>
+                                        <span className="text-[9px] uppercase tracking-widest opacity-60 font-bold">{label}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/70 animate-bounce">
+                        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 text-white/50 animate-bounce">
                             <i data-lucide="chevron-down" size="32"></i>
                         </div>
                     </section>
 
-                    {/* Story Section */}
-                    <section className="fade-in-up py-20 px-6 max-w-4xl mx-auto text-center">
-                        <div className="flex justify-center text-[#c5a059] mb-6"><i data-lucide="sparkles" size="28"></i></div>
-                        <h2 className="text-3xl md:text-4xl mb-8 font-light">Our Story</h2>
-                        <div className="grid md:grid-cols-2 gap-12 items-center">
-                            <div className="rounded-2xl overflow-hidden shadow-xl aspect-[4/5]">
-                                <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80" className="w-full h-full object-cover" />
-                            </div>
-                            <div className="text-left space-y-4 text-gray-600 leading-relaxed">
-                                <p>From a chance meeting at a local bookstore to a sunset proposal in the hills, our journey has been filled with laughter and adventure.</p>
-                                <p>Lorens fell for Cristine's infectious laugh, and Cristine found a home in Lorens' kindness. We can't wait to celebrate with you.</p>
-                            </div>
+                    {/* Transition Section */}
+                    <section className="fade-in-up py-24 px-6 text-center bg-white">
+                        <div className="animate-float inline-block text-emerald-luxe/30 mb-8">
+                            <i data-lucide="heart" size="48"></i>
                         </div>
+                        <h2 className="text-3xl md:text-5xl font-serif-luxe italic font-light max-w-3xl mx-auto leading-relaxed text-emerald-luxe">
+                            "Where there is love, there is life. We invite you to join us as we step into our new beginning."
+                        </h2>
                     </section>
 
-                    {/* Details */}
-                    <section className="py-20 bg-white">
-                        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="fade-in-up flex flex-col items-center p-10 bg-[#faf9f6] rounded-3xl">
-                                <div className="text-[#c5a059] mb-6"><i data-lucide="calendar" size="32"></i></div>
-                                <h3 className="uppercase tracking-widest text-sm font-bold mb-2">When</h3>
-                                <p>Saturday, June 21, 2025</p>
-                                <p className="text-gray-500 italic">4:00 PM Ceremony</p>
-                            </div>
-                            <div className="fade-in-up flex flex-col items-center p-10 bg-[#faf9f6] rounded-3xl" style={{transitionDelay: '100ms'}}>
-                                <div className="text-[#c5a059] mb-6"><i data-lucide="map-pin" size="32"></i></div>
-                                <h3 className="uppercase tracking-widest text-sm font-bold mb-2">Where</h3>
-                                <p>The Grand Oak Estate</p>
-                                <p className="text-gray-500 italic">Napa Valley, CA</p>
-                            </div>
-                            <div className="fade-in-up flex flex-col items-center p-10 bg-[#faf9f6] rounded-3xl" style={{transitionDelay: '200ms'}}>
-                                <div className="text-[#c5a059] mb-6"><i data-lucide="camera" size="32"></i></div>
-                                <h3 className="uppercase tracking-widest text-sm font-bold mb-2">Attire</h3>
-                                <p>Black Tie Optional</p>
-                                <p className="text-gray-500 italic">Summer garden elegance</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* RSVP */}
-                    <section className="py-24 bg-[#f3f1ec]">
-                        <div className="fade-in-up max-w-2xl mx-auto px-4">
-                            <div className="bg-white p-8 md:p-16 rounded-[2rem] shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-2 bg-[#c5a059]" />
-                                <div className="text-center mb-12">
-                                    <h2 className="text-4xl font-light mb-4">RSVP</h2>
-                                    <p className="text-gray-500 italic">Please respond by May 21st, 2025</p>
+                    {/* Event Details */}
+                    <section className="py-24 bg-[#f4f6f2] relative overflow-hidden">
+                        <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8 relative z-10">
+                            {[
+                                { icon: 'calendar-days', title: 'The Date', p1: 'June 21, 2025', p2: '4:00 PM Reception' },
+                                { icon: 'map', title: 'The Place', p1: 'Grand Oak Estate', p2: 'Napa Valley, CA' },
+                                { icon: 'sparkles', title: 'The Style', p1: 'Formal Garden', p2: 'Sage & Emerald Tones' }
+                            ].map((item, i) => (
+                                <div key={i} className="fade-in-up bg-white p-12 rounded-3xl shadow-sm border border-emerald-luxe/5 text-center transition-all hover:shadow-md">
+                                    <div className="text-emerald-luxe/40 mb-8 flex justify-center">
+                                        <i data-lucide={item.icon} size="32"></i>
+                                    </div>
+                                    <h4 className="font-serif-luxe text-2xl mb-4 tracking-wide text-emerald-luxe">{item.title}</h4>
+                                    <p className="text-gray-700 font-medium mb-1">{item.p1}</p>
+                                    <p className="text-gray-400 text-sm italic">{item.p2}</p>
                                 </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Story Section */}
+                    <section className="py-24 px-4 bg-white">
+                        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-20 items-center">
+                            <div className="fade-in-up relative group">
+                                <div className="absolute -inset-4 border border-emerald-luxe/10 rounded-full animate-slow-zoom" />
+                                <img 
+                                    src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80" 
+                                    className="rounded-full aspect-square object-cover shadow-2xl relative z-10" 
+                                />
+                            </div>
+                            <div className="fade-in-up space-y-8">
+                                <i data-lucide="stars" className="text-emerald-luxe/20" size="32"></i>
+                                <h3 className="text-5xl font-serif-luxe font-light text-emerald-luxe">Our Forever Story</h3>
+                                <p className="text-gray-600 leading-loose text-lg font-light">
+                                    What started as a shared passion for adventure grew into a lifetime of partnership. Lorens and Cristine found in each other a home that moves with them, wherever the road may lead.
+                                </p>
+                                <div className="h-px w-16 bg-emerald-luxe/20" />
+                                <p className="text-gray-500 italic font-serif-luxe text-xl">"I have found the one whom my soul loves."</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* RSVP Section */}
+                    <section className="py-32 bg-[#fdfdfb] relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-luxe/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+                        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-luxe/5 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
+
+                        <div className="fade-in-up max-w-2xl mx-auto px-6 relative z-10">
+                            <div className="bg-white/70 backdrop-blur-md p-10 md:p-16 rounded-[3rem] border border-emerald-luxe/10 shadow-xl text-center">
+                                <h2 className="text-5xl font-serif-luxe font-light mb-4 text-emerald-luxe tracking-tight">RSVP</h2>
+                                <p className="text-emerald-luxe/50 mb-12 italic font-serif-luxe text-lg">Kindly respond by the 21st of May, 2025</p>
 
                                 {rsvpStatus === 'success' ? (
-                                    <div className="text-center py-8">
-                                        <div className="text-green-500 mb-4"><i data-lucide="check-circle-2" size="48"></i></div>
-                                        <h3 className="text-2xl mb-2">See you there!</h3>
-                                        <p className="text-gray-600">Your response has been saved.</p>
+                                    <div className="py-12 bg-emerald-luxe/5 rounded-3xl border border-emerald-luxe/10">
+                                        <i data-lucide="check" className="mx-auto mb-6 text-emerald-luxe/60" size="48"></i>
+                                        <p className="text-2xl font-serif-luxe text-emerald-luxe">We look forward to celebrating with you!</p>
                                     </div>
                                 ) : (
-                                    <form onSubmit={handleRSVP} className="space-y-8">
-                                        <input 
-                                            required
-                                            className="w-full bg-transparent border-b-2 border-gray-100 py-3 focus:border-[#c5a059] outline-none transition-all"
-                                            placeholder="Your Full Name"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                        />
-                                        <select 
-                                            className="w-full bg-transparent border-b-2 border-gray-100 py-3 focus:border-[#c5a059] outline-none"
-                                            value={formData.attending}
-                                            onChange={(e) => setFormData({...formData, attending: e.target.value})}
-                                        >
-                                            <option value="accept">Happily Accepts</option>
-                                            <option value="decline">Regretfully Declines</option>
-                                        </select>
-                                        <button className="w-full bg-[#4a4a4a] text-white py-5 rounded-full hover:bg-[#333] transition-all uppercase tracking-widest text-xs font-bold shadow-xl">
-                                            {rsvpStatus === 'loading' ? 'Sending...' : 'Confirm Attendance'}
+                                    <form onSubmit={handleRSVP} className="space-y-10 text-left">
+                                        <div>
+                                            <label className="text-[10px] uppercase tracking-widest text-emerald-luxe/40 font-bold mb-3 block">Full Name</label>
+                                            <input 
+                                                required
+                                                className="w-full bg-transparent border-b border-emerald-luxe/20 py-4 focus:border-emerald-luxe outline-none transition-all text-2xl font-serif-luxe italic text-emerald-luxe"
+                                                placeholder="Guest Name"
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                            />
+                                        </div>
+                                        
+                                        <div className="grid md:grid-cols-2 gap-12">
+                                            <div>
+                                                <label className="text-[10px] uppercase tracking-widest text-emerald-luxe/40 font-bold mb-3 block">Attendance</label>
+                                                <select 
+                                                    className="w-full bg-transparent border-b border-emerald-luxe/20 py-4 focus:border-emerald-luxe outline-none appearance-none font-serif-luxe text-lg text-emerald-luxe"
+                                                    value={formData.attending}
+                                                    onChange={(e) => setFormData({...formData, attending: e.target.value})}
+                                                >
+                                                    <option value="accept">Happily Accepts</option>
+                                                    <option value="decline">Regretfully Declines</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] uppercase tracking-widest text-emerald-luxe/40 font-bold mb-3 block">Guest Count</label>
+                                                <select 
+                                                    className="w-full bg-transparent border-b border-emerald-luxe/20 py-4 focus:border-emerald-luxe outline-none appearance-none font-serif-luxe text-lg text-emerald-luxe"
+                                                    value={formData.guests}
+                                                    onChange={(e) => setFormData({...formData, guests: e.target.value})}
+                                                >
+                                                    {[1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <button className="w-full bg-emerald-luxe text-white py-6 rounded-full hover:shadow-lg hover:-translate-y-1 transition-all uppercase tracking-[0.4em] text-[10px] font-black mt-12">
+                                            {rsvpStatus === 'loading' ? 'Sending...' : 'Confirm My Attendance'}
                                         </button>
                                     </form>
                                 )}
@@ -209,28 +290,15 @@
                         </div>
                     </section>
 
-                    <footer className="py-16 bg-white text-center">
-                        <h2 className="text-3xl font-script mb-4">Lorens & Cristine</h2>
-                        <p className="text-[10px] text-gray-300 uppercase tracking-widest">#LorensAndCristine2025</p>
+                    <footer className="py-24 text-center bg-white border-t border-gray-50">
+                        <div className="flex justify-center gap-4 mb-8 text-emerald-luxe/10">
+                            <i data-lucide="heart" size="24"></i>
+                            <i data-lucide="heart" size="24"></i>
+                            <i data-lucide="heart" size="24"></i>
+                        </div>
+                        <h2 className="text-5xl font-script text-emerald-luxe mb-4">Lorens & Cristine</h2>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-[0.6em] font-medium">Napa Valley • 2025</p>
                     </footer>
-
-                    {/* Floating Leaves */}
-                    <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.1]">
-                        {[...Array(6)].map((_, i) => (
-                            <div 
-                                key={i}
-                                className="absolute animate-float-slow text-[#c5a059]"
-                                style={{
-                                    left: `${(i * 18) % 100}%`,
-                                    top: `${(i * 25) % 100}%`,
-                                    animationDelay: `${i * 1.2}s`,
-                                    fontSize: '24px'
-                                }}
-                            >
-                                🌿
-                            </div>
-                        ))}
-                    </div>
                 </div>
             );
         };
@@ -238,8 +306,7 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
 
-        // Initialize Icons after React Render
-        setTimeout(() => { lucide.createIcons(); }, 100);
+        setTimeout(() => { lucide.createIcons(); }, 300);
     </script>
 </body>
 </html>
